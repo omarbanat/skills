@@ -1,0 +1,10 @@
+{
+  "name": "omarbanat-skills",
+  "version": "0.1.0",
+  "description": "Omar Banat's agent skills for engineering and day-to-day work.",
+  "author": {
+    "name": "Omar Banat"
+  },
+  "repository": "https://github.com/omarbanat/skills",
+  "skills": []
+}
