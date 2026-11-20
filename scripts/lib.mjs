@@ -34,12 +34,15 @@ export function listSkills(errors = []) {
         errors.push(`skills/${bucket}/${name}/: folder has no SKILL.md`);
         continue;
       }
-      const frontmatter = parseFrontmatter(readFileSync(file, "utf8"));
+      const text = readFileSync(file, "utf8");
+      const frontmatter = parseFrontmatter(text);
       skills.push({
         bucket,
         name,
+        dir,
         rel: `skills/${bucket}/${name}`,
         frontmatter,
+        bodyLines: bodyLineCount(text),
         userInvoked: frontmatter?.["disable-model-invocation"] === "true",
       });
     }
@@ -47,10 +50,18 @@ export function listSkills(errors = []) {
   return skills;
 }
 
+const FRONTMATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\s*(\r?\n|$)/;
+
+// Lines of SKILL.md after the frontmatter, not counting blank lines at either end.
+export function bodyLineCount(text) {
+  const body = text.replace(FRONTMATTER_RE, "").trim();
+  return body ? body.split(/\r?\n/).length : 0;
+}
+
 // Minimal YAML frontmatter reader: top-level `key: value` pairs, quoted strings,
 // and `>` / `|` block scalars. Enough for SKILL.md headers; returns null when absent.
 export function parseFrontmatter(text) {
-  const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---\s*(\r?\n|$)/);
+  const match = text.match(FRONTMATTER_RE);
   if (!match) return null;
   const lines = match[1].split(/\r?\n/);
   const data = {};

@@ -10,21 +10,13 @@ description: {{description}}
 
 # {{title}}
 
-One or two sentences: what this skill produces, and the failure it exists to prevent.
-
-## Inputs
-
-- What the user passes in, and the default when they pass nothing.
+TODO Why this skill exists, in one or two sentences: where the agent went wrong without it. Keep only the sections below that the skill needs; a short skill can be one paragraph.
 
 ## Steps
 
-1. First thing to do.
-2. Next thing to do.
+1. TODO First step. Done when ... (something the agent can check).
+2. TODO Next step. Done when ....
 
-## Output
+## Example
 
-What the user gets at the end, and in what shape (a file, a report in chat, a PR, ...).
-
-## Gotchas
-
-- Mistakes seen in practice, and how to avoid them.
+TODO One real example of the finished output.

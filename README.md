@@ -6,7 +6,7 @@ My agent skills for Claude Code. Each skill is a folder with a `SKILL.md` and wh
 
 Use one route per machine. With both, every skill shows up twice.
 
-**Symlinks (for working on the skills).** Edits take effect in your next session, with no reinstall.
+**Symlinks (for working on the skills).** Edits apply in the current session, with no reinstall.
 
 ```bash
 git clone https://github.com/omarbanat/skills.git
@@ -39,11 +39,13 @@ The plugin ships only `engineering/` and `productivity/`. Its skills appear as `
 ## Add a skill
 
 ```bash
-node scripts/new-skill.mjs in-progress my-skill          # Claude can pick it up on its own
-node scripts/new-skill.mjs in-progress my-skill --user   # runs only when you type /my-skill
+node scripts/new-skill.mjs in-progress my-skill           # runs only when you type /my-skill
+node scripts/new-skill.mjs in-progress my-skill --model   # Claude can also pick it up on its own
 ```
 
-This creates `skills/in-progress/my-skill/SKILL.md` from [the template](./.agents/skill-template.md), adds it to the lists below and to `plugin.json`, and links it. Then write the skill, following [writing-skills.md](./.agents/writing-skills.md).
+Skills start user-invoked, which costs no context. Pass `--model` only when Claude, or another skill, must reach the skill without you.
+
+This creates `skills/in-progress/my-skill/SKILL.md` from [the template](./.agents/skill-template.md), adds it to the lists below and to `plugin.json`, and links it. Then write and test the skill, following [writing-skills.md](./.agents/writing-skills.md).
 
 To bring in a skill that already lives in `~/.claude/skills`:
 
@@ -59,9 +61,12 @@ When a skill graduates, renames or retires, move its folder and run the same two
 `node scripts/check.mjs` checks that:
 
 - each folder name matches its `name:`, names are unique, and descriptions are present and at most 1024 characters
+- each `SKILL.md` body is at most 500 lines
 - `plugin.json` lists exactly the `engineering/` and `productivity/` skills
 - the skill lists in this README and in each bucket README are up to date
 - `claude plugin validate .` passes (its warnings about CLAUDE.md, LICENSE and icon are expected and ignored)
+
+It warns, without failing, when a model-invoked description has no "Use when" trigger, when a reference file over 300 lines has no table of contents, and when a description still contains TODO.
 
 `--fix` regenerates `plugin.json` and the lists. It keeps one-liners you have edited by hand.
 

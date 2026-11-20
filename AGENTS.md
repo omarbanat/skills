@@ -14,8 +14,9 @@ The bucket list lives in three places that must agree: this table, `BUCKETS`/`PR
 
 ## Rules
 
-- Create a skill with `node scripts/new-skill.mjs <bucket> <name> [--user]`. Don't hand-create the folder; the script also updates the lists and links the skill.
-- Write skills by following [.agents/writing-skills.md](./.agents/writing-skills.md). It covers frontmatter, descriptions, invocation and file layout.
+- Create a skill with `node scripts/new-skill.mjs <bucket> <name> [--model]`. Don't hand-create the folder; the script also updates the lists and links the skill.
+- A new skill is user-invoked. Pass `--model` only when the agent, or another skill, must reach it without the user typing `/name`.
+- Write and edit skills by following [.agents/writing-skills.md](./.agents/writing-skills.md). It covers what belongs in a skill, invocation, descriptions, the body, file layout and testing.
 - The folder name and the `name:` in frontmatter must match.
 - New skills start in `in-progress/` unless the user names another bucket.
 - The skill folders are the source of truth. These parts are derived from them by `node scripts/check.mjs --fix`, so never add or remove their entries by hand:

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Symlinks this repo's skills into ~/.claude/skills (and ~/.agents/skills when that
-# folder exists), so edits here take effect in the next session with no install step.
+# folder exists), so edits here apply in the current session with no install step.
 #
 #   scripts/link-skills.sh            link engineering/, productivity/ and in-progress/ skills
 #   scripts/link-skills.sh --unlink   remove every link that points into this repo

@@ -13,12 +13,20 @@
 // The skill folders and their SKILL.md frontmatter are the source of truth.
 // Regenerating keeps the order and hand-written one-liners of entries that are
 // already listed, and appends new ones using the first sentence of the description.
+//
+// It also enforces the checkable rules from .agents/writing-skills.md: the name
+// format, the description and body caps (errors), a "Use when" trigger in
+// model-invoked descriptions and a table of contents in long reference files (warnings).
 
-import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { BUCKETS, NAME_RE, PLUGIN_JSON, PROMOTED, REPO, listSkills, summaryOf } from "./lib.mjs";
+
+const MAX_DESCRIPTION = 1024;
+const MAX_BODY_LINES = 500;
+const TOC_ABOVE_LINES = 300;
 
 const fix = process.argv.includes("--fix");
 const validate = !process.argv.includes("--no-validate");
@@ -73,14 +81,34 @@ function checkFrontmatter(skills, errors, warnings) {
       errors.push(`${where}: name must be lowercase letters, digits and single hyphens, at most 64 characters`);
     }
     if (!fm.description) errors.push(`${where}: frontmatter has no \`description\``);
-    else if (fm.description.length > 1024) {
-      errors.push(`${where}: description is ${fm.description.length} characters (max 1024)`);
+    else if (fm.description.length > MAX_DESCRIPTION) {
+      errors.push(`${where}: description is ${fm.description.length} characters (max ${MAX_DESCRIPTION})`);
     } else if (/\bTODO\b/.test(fm.description)) {
       warnings.push(`${where}: description still contains TODO`);
+    } else if (!s.userInvoked && !/\buse when\b/i.test(fm.description)) {
+      warnings.push(`${where}: model-invoked description has no "Use when ..." trigger. Add one, or set disable-model-invocation: true.`);
     }
     const dmi = fm["disable-model-invocation"];
     if (dmi !== undefined && dmi !== "true" && dmi !== "false") {
       errors.push(`${where}: disable-model-invocation must be true or false`);
+    }
+    if (s.bodyLines > MAX_BODY_LINES) {
+      errors.push(`${where}: body is ${s.bodyLines} lines (max ${MAX_BODY_LINES}). Move what only some runs need into references/.`);
+    }
+    checkReferences(s, warnings);
+  }
+}
+
+// A long reference file needs a table of contents so the agent can jump to the part it needs.
+function checkReferences(skill, warnings) {
+  const refs = join(skill.dir, "references");
+  if (!existsSync(refs)) return;
+  for (const entry of readdirSync(refs, { recursive: true }).sort()) {
+    if (!entry.endsWith(".md")) continue;
+    const text = readFileSync(join(refs, entry), "utf8");
+    const lines = text.trimEnd().split(/\r?\n/).length;
+    if (lines > TOC_ABOVE_LINES && !/^(#{1,6} +|\*\*)(table of )?contents\b/im.test(text)) {
+      warnings.push(`${skill.rel}/references/${entry}: ${lines} lines with no table of contents. Add a "## Contents" list near the top.`);
     }
   }
 }

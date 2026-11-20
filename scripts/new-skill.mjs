@@ -2,9 +2,13 @@
 // Scaffolds a new skill from .agents/skill-template.md, updates the README lists
 // and plugin.json, and links the skill into ~/.claude/skills when its bucket is linked.
 //
-//   node scripts/new-skill.mjs <bucket> <name> [--user]
+//   node scripts/new-skill.mjs <bucket> <name> [--model]
 //
-//   --user   user-invoked: only runs when you type /<name> (disable-model-invocation: true)
+// A new skill is user-invoked: it only runs when you type /<name>
+// (disable-model-invocation: true), so it costs no context.
+//
+//   --model   model-invoked: the agent can also fire it on its own. Use this only
+//             when the agent, or another skill, must reach the skill without you.
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
@@ -13,14 +17,18 @@ import { BUCKETS, NAME_RE, REPO, SKILLS_DIR, TEMPLATE, listSkills } from "./lib.
 import { run as check } from "./check.mjs";
 
 const args = process.argv.slice(2);
-const user = args.includes("--user");
+const flags = args.filter((a) => a.startsWith("--"));
+const user = !flags.includes("--model");
 const [bucket, name] = args.filter((a) => !a.startsWith("--"));
 
 function fail(message) {
   console.error(`error: ${message}`);
-  console.error("usage: node scripts/new-skill.mjs <bucket> <name> [--user]");
+  console.error("usage: node scripts/new-skill.mjs <bucket> <name> [--model]");
   process.exit(1);
 }
+
+const unknown = flags.filter((f) => f !== "--model");
+if (unknown.length) fail(`unknown option ${unknown.join(", ")} (skills are user-invoked unless you pass --model)`);
 
 if (!bucket || !name) fail("bucket and name are required");
 if (!BUCKETS.includes(bucket)) fail(`unknown bucket "${bucket}" (expected one of ${BUCKETS.join(", ")})`);
@@ -38,8 +46,8 @@ const title = name
   .map((w) => w[0].toUpperCase() + w.slice(1))
   .join(" ");
 const description = user
-  ? "TODO one line describing what this does, shown in the slash-command menu."
-  : "TODO what this skill does, in one sentence. Use when the user asks to ..., mentions ..., or wants ....";
+  ? "TODO one-line label saying what this does, shown in the slash-command menu."
+  : "TODO short label saying what this is. Use when ..., or when the user mentions ....";
 
 const body = readFileSync(TEMPLATE, "utf8")
   .replace(/^<!--[\s\S]*?-->\n+/, "") // drop the template's own header comment
