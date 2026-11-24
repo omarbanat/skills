@@ -15,7 +15,7 @@ scripts/link-skills.sh
 git config core.hooksPath .githooks   # run the checks before each commit
 ```
 
-This links every skill in `engineering/`, `productivity/` and `in-progress/` into `~/.claude/skills`. It never replaces a real folder that has the same name. Run `scripts/link-skills.sh --unlink` to remove the links.
+This links every skill in `engineering/`, `productivity/` and `in-progress/` into `~/.claude/skills`, and any subagent a skill keeps in its own `agents/` folder into `~/.claude/agents`. It never replaces a real folder or file that has the same name. Run `scripts/link-skills.sh --unlink` to remove the links.
 
 **Plugin (for using them without editing).** You need read access to this private repo.
 
@@ -24,7 +24,7 @@ This links every skill in `engineering/`, `productivity/` and `in-progress/` int
 /plugin install omarbanat-skills@omarbanat
 ```
 
-The plugin ships only `engineering/` and `productivity/`. Its skills appear as `omarbanat-skills:<name>`, and installed copies update when `version` in [`.claude-plugin/plugin.json`](./.claude-plugin/plugin.json) is bumped.
+The plugin ships only `engineering/` and `productivity/`, plus the subagents those skills keep in `agents/` (listed by hand under `agents` in `plugin.json`). Its skills and agents appear as `omarbanat-skills:<name>`, and installed copies update when `version` in [`.claude-plugin/plugin.json`](./.claude-plugin/plugin.json) is bumped.
 
 ## Layout
 
@@ -81,6 +81,7 @@ It warns, without failing, when a model-invoked description has no "Use when" tr
 <!-- skills:engineering:user -->
 
 - **[figma-align](./skills/engineering/figma-align/SKILL.md)**: Make a page, modal, drawer or component in the current repo match its Figma design, then check the result in the browser at desktop and mobile width.
+- **[owasp-audit](./skills/engineering/owasp-audit/SKILL.md)**: Audit a branch against the OWASP Top 10:2025 on Claude Mythos, validate every finding and suggest fixes.
 
 <!-- /skills:engineering:user -->
 

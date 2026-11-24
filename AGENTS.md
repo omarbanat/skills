@@ -27,4 +27,5 @@ The bucket list lives in three places that must agree: this table, `BUCKETS`/`PR
 - After moving, renaming or deleting a skill, or changing its description or `disable-model-invocation`, run `node scripts/check.mjs --fix` and then `scripts/link-skills.sh`.
 - Run `node scripts/check.mjs` before committing. The pre-commit hook in `.githooks/` runs it too.
 - When a change to an `engineering/` or `productivity/` skill should reach people who installed the plugin, bump `version` in `.claude-plugin/plugin.json` (semver). Symlinked installs don't need a bump.
+- A skill that needs its own subagent (for example one that pins a model) keeps it in `agents/<name>.md` inside the skill folder. `scripts/link-skills.sh` links it into `~/.claude/agents`. `check.mjs --fix` doesn't manage the `agents` array in `.claude-plugin/plugin.json`, so when such a skill moves into or out of `engineering/` or `productivity/`, add or remove its agent there by hand. Plugin agents are namespaced (`omarbanat-skills:<name>`), so the skill must handle both names.
 - Never put credentials, tokens or customer data in a skill. Skills are plain text, and the plugin copies them to other machines.

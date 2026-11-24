@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Symlinks this repo's skills into ~/.claude/skills (and ~/.agents/skills when that
 # folder exists), so edits here apply in the current session with no install step.
+# Subagent files a skill ships in its own agents/ folder (e.g. one that pins a model)
+# are linked into ~/.claude/agents the same way.
 #
 #   scripts/link-skills.sh            link engineering/, productivity/ and in-progress/ skills
 #   scripts/link-skills.sh --unlink   remove every link that points into this repo
@@ -94,3 +96,55 @@ for DEST in "${DESTS[@]}"; do
     echo "linked $name -> ${src#"$REPO"/} ($DEST)"
   done
 done
+
+# Subagents shipped inside linked skills: skills/<bucket>/<name>/agents/*.md -> ~/.claude/agents/
+AGENTS_DEST="$HOME/.claude/agents"
+agent_srcs=()
+for src in ${srcs[@]+"${srcs[@]}"}; do
+  for f in "$src"/agents/*.md; do
+    [ -e "$f" ] && agent_srcs+=("$f")
+  done
+done
+
+is_wanted_agent() {
+  local path="$1" a
+  for a in ${agent_srcs[@]+"${agent_srcs[@]}"}; do
+    [ "$a" = "$path" ] && return 0
+  done
+  return 1
+}
+
+if [ -d "$AGENTS_DEST" ] || [ "${#agent_srcs[@]}" -gt 0 ]; then
+  mkdir -p "$AGENTS_DEST"
+  for entry in "$AGENTS_DEST"/*.md; do
+    [ -L "$entry" ] || continue
+    target="$(readlink "$entry")"
+    case "$target" in
+      "$REPO"/skills/*)
+        if ! is_wanted_agent "$target"; then
+          rm "$entry"
+          echo "unlinked agent $(basename "$entry")"
+        fi
+        ;;
+    esac
+  done
+  for f in ${agent_srcs[@]+"${agent_srcs[@]}"}; do
+    target="$AGENTS_DEST/$(basename "$f")"
+    if [ -L "$target" ]; then
+      current="$(readlink "$target")"
+      [ "$current" = "$f" ] && continue
+      case "$current" in
+        "$REPO"/*) ;;
+        *)
+          echo "skipped agent $(basename "$f"): $target already links to $current" >&2
+          continue
+          ;;
+      esac
+    elif [ -e "$target" ]; then
+      echo "skipped agent $(basename "$f"): $target is a real file" >&2
+      continue
+    fi
+    ln -sfn "$f" "$target"
+    echo "linked agent $(basename "$f") -> ${f#"$REPO"/}"
+  done
+fi

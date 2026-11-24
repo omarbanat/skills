@@ -9,6 +9,7 @@ Run only when you type `/name` (`disable-model-invocation: true`).
 <!-- skills:user -->
 
 - **[figma-align](./figma-align/SKILL.md)**: Make a page, modal, drawer or component in the current repo match its Figma design, then check the result in the browser at desktop and mobile width.
+- **[owasp-audit](./owasp-audit/SKILL.md)**: Audit a branch against the OWASP Top 10:2025 on Claude Mythos, validate every finding and suggest fixes.
 
 <!-- /skills:user -->
 
