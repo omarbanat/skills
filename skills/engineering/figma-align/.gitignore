@@ -1,0 +1,3 @@
+# Per-repo profiles (frames.md, design.md, run.md) are written here at runtime by
+# scripts/profile.mjs. They describe client projects, so they stay out of git.
+projects/

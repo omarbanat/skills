@@ -8,7 +8,7 @@ Run only when you type `/name` (`disable-model-invocation: true`).
 
 <!-- skills:user -->
 
-_None yet._
+- **[figma-align](./figma-align/SKILL.md)**: Make a page, modal, drawer or component in the current repo match its Figma design, then check the result in the browser at desktop and mobile width.
 
 <!-- /skills:user -->
 
