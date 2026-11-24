@@ -15,6 +15,11 @@ export const PROMOTED = ["engineering", "productivity"];
 
 export const NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
+// `npx skills` (the skills.sh CLI) finds every skills/<bucket>/<name>/SKILL.md.
+// It hides skills marked `metadata: internal: "true"`, so check.mjs --fix sets that
+// on every skill outside PROMOTED and removes it from the promoted ones.
+export const isInternal = (frontmatter) => ["true", "1"].includes(frontmatter?.metadata?.internal);
+
 // Every skills/<bucket>/<name>/SKILL.md. Problems with the folder layout go into `errors`.
 export function listSkills(errors = []) {
   const skills = [];
@@ -59,7 +64,8 @@ export function bodyLineCount(text) {
 }
 
 // Minimal YAML frontmatter reader: top-level `key: value` pairs, quoted strings,
-// and `>` / `|` block scalars. Enough for SKILL.md headers; returns null when absent.
+// `>` / `|` block scalars, and one level of nested `key: value` pairs (for `metadata:`).
+// Enough for SKILL.md headers; returns null when absent.
 export function parseFrontmatter(text) {
   const match = text.match(FRONTMATTER_RE);
   if (!match) return null;
@@ -71,7 +77,13 @@ export function parseFrontmatter(text) {
     if (!kv) continue;
     const [, key, raw] = kv;
     let value = raw.trim();
-    if (/^[>|][+-]?$/.test(value)) {
+    if (value === "" && /^\s+[A-Za-z0-9_-]+:/.test(lines[i + 1] ?? "")) {
+      value = {};
+      while (i + 1 < lines.length && /^\s+[A-Za-z0-9_-]+:/.test(lines[i + 1])) {
+        const [, k, v] = lines[++i].trim().match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+        value[k] = v.trim().replace(/^"(.*)"$|^'(.*)'$/, "$1$2");
+      }
+    } else if (/^[>|][+-]?$/.test(value)) {
       const block = [];
       while (i + 1 < lines.length && (/^\s+\S/.test(lines[i + 1]) || lines[i + 1].trim() === "")) {
         block.push(lines[++i].trim());

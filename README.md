@@ -4,7 +4,7 @@ My agent skills for Claude Code. Each skill is a folder with a `SKILL.md` and wh
 
 ## Install
 
-Use one route per machine. With both, every skill shows up twice.
+Use one route per machine. With two, every skill shows up twice.
 
 **Symlinks (for working on the skills).** Edits apply in the current session, with no reinstall.
 
@@ -25,6 +25,20 @@ This links every skill in `engineering/`, `productivity/` and `in-progress/` int
 ```
 
 The plugin ships only `engineering/` and `productivity/`, plus the subagents those skills keep in `agents/` (listed by hand under `agents` in `plugin.json`). Its skills and agents appear as `omarbanat-skills:<name>`, and installed copies update when `version` in [`.claude-plugin/plugin.json`](./.claude-plugin/plugin.json) is bumped.
+
+**npx (for picking single skills, or for other agents).** The [skills CLI](https://skills.sh) installs skills from this repo into Claude Code, Codex, Cursor and other agents. It clones with your Git or GitHub CLI login, so you still need read access to the repo.
+
+```bash
+npx skills add omarbanat/skills --list                                   # what's available
+npx skills add omarbanat/skills -g -a claude-code                        # pick skills from a menu
+npx skills add omarbanat/skills --skill owasp-audit -g -a claude-code -y  # one skill, no prompts
+npx skills update                                                         # pull the latest versions
+npx skills remove owasp-audit
+```
+
+`-g` installs into `~/.claude/skills` for every project. Leave it out to install into the current project's `.claude/skills`. Drop `-a claude-code` to pick agents from a menu.
+
+Like the plugin, npx offers only `engineering/` and `productivity/`. Every other skill carries `metadata: internal: "true"`, which hides it, and `node scripts/check.mjs --fix` keeps that flag in step with the bucket. To install a draft anyway, prefix the command with `INSTALL_INTERNAL_SKILLS=1`. Skills keep their plain names (no `omarbanat-skills:` prefix). npx does not install the subagents in `agents/` folders, so a skill that uses one falls back to a general-purpose agent, as `owasp-audit` does.
 
 ## Layout
 
@@ -64,11 +78,12 @@ When a skill graduates, renames or retires, move its folder and run the same two
 - each `SKILL.md` body is at most 500 lines
 - `plugin.json` lists exactly the `engineering/` and `productivity/` skills
 - the skill lists in this README and in each bucket README are up to date
+- every skill outside `engineering/` and `productivity/`, and only those, carries `metadata: internal: "true"`, so npx hides it
 - `claude plugin validate .` passes (its warnings about CLAUDE.md, LICENSE and icon are expected and ignored)
 
 It warns, without failing, when a model-invoked description has no "Use when" trigger, when a reference file over 300 lines has no table of contents, and when a description still contains TODO.
 
-`--fix` regenerates `plugin.json` and the lists. It keeps one-liners you have edited by hand.
+`--fix` regenerates `plugin.json`, the lists and the `internal` flags. It keeps one-liners you have edited by hand.
 
 ## Skills
 

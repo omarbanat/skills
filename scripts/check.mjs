@@ -3,8 +3,9 @@
 //
 //   node scripts/check.mjs                 check everything
 //   node scripts/check.mjs --fix           also regenerate the derived parts:
-//                                          plugin.json's `skills` array and the
-//                                          skill lists between <!-- skills:... --> markers
+//                                          plugin.json's `skills` array, the
+//                                          skill lists between <!-- skills:... --> markers,
+//                                          and `metadata.internal` in each SKILL.md
 //   node scripts/check.mjs --no-validate   skip `claude plugin validate`
 //
 // `claude plugin validate` runs without --strict: its warnings (CLAUDE.md at the
@@ -22,7 +23,7 @@ import { existsSync, readdirSync, readFileSync, realpathSync, writeFileSync } fr
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { BUCKETS, NAME_RE, PLUGIN_JSON, PROMOTED, REPO, listSkills, summaryOf } from "./lib.mjs";
+import { BUCKETS, NAME_RE, PLUGIN_JSON, PROMOTED, REPO, isInternal, listSkills, summaryOf } from "./lib.mjs";
 
 const MAX_DESCRIPTION = 1024;
 const MAX_BODY_LINES = 500;
@@ -41,6 +42,7 @@ export function run({ fix = false, validate = true, quiet = false } = {}) {
   const before = errors.length;
   syncPluginJson(skills, fix, errors, fixed);
   syncReadmes(skills, fix, errors, fixed);
+  syncInternal(skills, fix, errors, fixed);
   const fixable = errors.slice(before).some((e) => e.includes("out of date"));
   // Validate after --fix has written plugin.json, so it sees the final manifest.
   if (validate) validatePlugin(errors);
@@ -52,7 +54,7 @@ export function run({ fix = false, validate = true, quiet = false } = {}) {
     if (errors.length === 0) {
       console.log(`ok: ${skills.length} skill${skills.length === 1 ? "" : "s"} checked`);
     } else if (fixable) {
-      console.error("\nRun `node scripts/check.mjs --fix` to regenerate plugin.json and the README lists.");
+      console.error("\nRun `node scripts/check.mjs --fix` to regenerate plugin.json, the README lists and the npx visibility flags.");
     }
   }
   return { errors, warnings, fixed };
@@ -137,7 +139,39 @@ function syncPluginJson(skills, fix, errors, fixed) {
   }
 }
 
-const ENTRY_RE = /^- \*\*\[([a-z0-9-]+)\]\(([^)]+)\)\*\*: (.*)$/;
+// `npx skills add` offers every skill it finds, so skills outside the promoted
+// buckets carry `metadata: internal: "true"` to stay hidden, matching the plugin.
+function syncInternal(skills, fix, errors, fixed) {
+  for (const s of skills) {
+    if (!s.frontmatter) continue;
+    const want = !PROMOTED.includes(s.bucket);
+    if (isInternal(s.frontmatter) === want) continue;
+    const where = `${s.rel}/SKILL.md`;
+    const action = want ? 'add metadata.internal: "true"' : "remove metadata.internal";
+    if (!fix) {
+      errors.push(`${where}: npx visibility out of date (${action})`);
+      continue;
+    }
+    const file = join(s.dir, "SKILL.md");
+    const text = readFileSync(file, "utf8");
+    const [, head, rest] = text.match(/^(---\r?\n[\s\S]*?\r?\n)(---[\s\S]*)$/);
+    const lines = head.trimEnd().split(/\r?\n/);
+    const meta = lines.findIndex((l) => /^metadata:\s*$/.test(l));
+    const inMeta = (i) => i > meta && /^\s+\S/.test(lines[i]);
+    if (want) {
+      if (meta === -1) lines.push("metadata:", '  internal: "true"');
+      else lines.splice(meta + 1, 0, '  internal: "true"');
+    } else {
+      const at = lines.findIndex((l, i) => meta !== -1 && inMeta(i) && /^\s+internal:/.test(l));
+      lines.splice(at, 1);
+      if (!inMeta(meta + 1)) lines.splice(meta, 1); // metadata: is now empty
+    }
+    writeFileSync(file, lines.join("\n") + "\n" + rest);
+    fixed.push(`${where} (${action})`);
+  }
+}
+
+const ENTRY_RE =/^- \*\*\[([a-z0-9-]+)\]\(([^)]+)\)\*\*: (.*)$/;
 const EMPTY = "_None yet._";
 
 // Each README region lists the skills that belong to it, between

@@ -42,6 +42,7 @@ A user-invoked skill can tell the agent to run a model-invoked one ("Call the Sk
 | `disable-model-invocation` | no | `true` makes the skill user-invoked. |
 | `argument-hint` | no | Shown after `/name` in the menu, e.g. `"[pr-number] [focus]"`. |
 | `allowed-tools` | no | Tools the skill may use without asking for permission. |
+| `metadata.internal` | no | Hides the skill from `npx skills add`. Never set it by hand: `node scripts/check.mjs --fix` sets it on skills outside `engineering/` and `productivity/`. |
 
 `node scripts/check.mjs` enforces what a validator can: the name, the description cap, valid YAML and the 500-line body cap. It warns when a model-invoked description has no "Use when" and when a long reference file has no table of contents.
 
