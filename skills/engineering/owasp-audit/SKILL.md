@@ -37,12 +37,14 @@ Spawn the `owasp-auditor` subagent with the Agent tool. When the skill is instal
 - the scope from step 1 (target, base, mode, root directory, changed files, focus, whether tests may run)
 - the absolute paths of `<skill-dir>/references/owasp-top10-2025.md` and `<skill-dir>/scripts/deps-audit.sh`, where `<skill-dir>` is the base directory shown when this skill loads
 
-**Fallback.** Spawn the auditor again with the Agent tool's `model: "fable"` in either case:
+**Fallback.** Spawn the `owasp-auditor-opus` agent (`omarbanat-skills:owasp-auditor-opus` from the plugin) in either case:
 
 - the spawn fails because the model is unavailable or not allowed
 - the report's first line names a model other than Mythos
 
-Anthropic documents Mythos 5.2 as the same model as Fable 5.2, offered only to verified organizations, so Fable is the closest substitute. If the `owasp-auditor` agent type doesn't exist (it isn't linked, or the session started before it was), spawn `general-purpose` with `model: "fable"`. Tell it to read `<skill-dir>/agents/owasp-auditor.md` and follow its body as its instructions.
+It pins `model: claude-opus-4-7` and follows the same instructions. Pass it the same prompt, plus the absolute path of `<skill-dir>/agents/owasp-auditor.md`. The Agent tool's `model` option can't pin Opus 4.7, because its `opus` alias means the latest Opus, so the pin has to come from this agent file.
+
+If neither agent type exists (the skill was installed with npx, or the session started before the agents were linked), spawn `general-purpose` with `model: "opus"`. Tell it to read `<skill-dir>/agents/owasp-auditor.md` and follow its body as its instructions. This runs on the latest Opus, not 4.7, so say so in the report header.
 
 **Done when** you have the auditor's full report and know which model produced it.
 

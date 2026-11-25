@@ -1,6 +1,6 @@
 {
   "name": "omarbanat-skills",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Omar Banat's agent skills for engineering and day-to-day work.",
   "author": {
     "name": "Omar Banat"
@@ -11,6 +11,7 @@
     "./skills/engineering/owasp-audit"
   ],
   "agents": [
-    "./skills/engineering/owasp-audit/agents/owasp-auditor.md"
+    "./skills/engineering/owasp-audit/agents/owasp-auditor.md",
+    "./skills/engineering/owasp-audit/agents/owasp-auditor-opus.md"
   ]
 }
